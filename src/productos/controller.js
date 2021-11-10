@@ -1,19 +1,22 @@
+const createError = require("http-errors");
 const debug = require("debug")("app:module-producto-controller");
 
 const {
     ProductsService
 } = require("./services");
 
+const {
+    Response
+} = require("../common/response");
+
 module.exports.ProductsController = {
     getProducts: async (req, res) => {
         try {
             let productos = await ProductsService.getAll();
-            res.json(productos);
+            Response.success(res, 200, "Lista de productos", productos);
         } catch (error) {
             debug(error);
-            res.status(500).json({
-                message: "insternal Server Error",
-            });
+            Response.error(res);
         }
     },
 
@@ -22,15 +25,17 @@ module.exports.ProductsController = {
             const {
                 params: {
                     id
-                }
+                },
             } = req;
             let producto = await ProductsService.getById(id);
-            res.json(producto);
+            if (!producto) {
+                Response.error(res, new createError.NotFound());
+            } else {
+                Response.success(res, 200, `Producto ${id}`, producto);
+            }
         } catch (error) {
             debug(error);
-            res.status(500).json({
-                message: "insternal Server Error",
-            });
+            Response.error(res);
         }
     },
 
@@ -39,13 +44,15 @@ module.exports.ProductsController = {
             const {
                 body
             } = req;
-            const insertedId = await ProductsService.create(body);
-            res.json(insertedId);
+            if (!body || Object.keys(body).length === 0) {
+                Response.error(res, new createError.BadRequest());
+            } else {
+                const insertedId = await ProductsService.create(body);
+                Response.success(res, 201, "Producto agregado", insertedId);
+            }
         } catch (error) {
             debug(error);
-            res.status(500).json({
-                message: "insternal Server Error",
-            });
+            Response.error(res);
         }
     },
 };
