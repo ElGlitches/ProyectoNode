@@ -6,6 +6,8 @@ const {
     Database
 } = require("../database/index");
 
+const {productosUtils}= require('./utils');
+
 const COLLECTION = "productos";
 
 const getAll = async () => {
@@ -26,8 +28,15 @@ const create = async (producto) => {
     return result.insertedId;
 };
 
+const generateReport =  async ( name, res) =>{
+    let productos = await getAll();
+    productosUtils.exelGenerator(productos, name, res)
+
+}
+
 module.exports.ProductsService = {
     getAll,
     getById,
     create,
+    generateReport,
 };
